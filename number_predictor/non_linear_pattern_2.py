@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.neural_network import MLPRegressor
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.preprocessing import StandardScaler
 import warnings
 import random # Needed for data generation
@@ -121,24 +121,44 @@ scaler_y = StandardScaler()
 y_train_scaled = scaler_y.fit_transform(y_train.reshape(-1, 1)).flatten()
 y_test_scaled = scaler_y.transform(y_test.reshape(-1, 1)).flatten()
 
-
 print(f"\nScaled X_train_scaled[0]: {X_train_scaled[0]}")
 print(f"Scaled y_train_scaled[0]: {y_train_scaled[0]}")
 
+print("\n--- Starting GridSearchCV for Hyperparameter Tuning ---")
 
-# --- MLPRegressor Model and Training (Tuned Parameters) ---
-model = MLPRegressor(hidden_layer_sizes=(100, 50, 25), # More layers/neurons
-                     activation='relu',
-                     solver='adam',
-                     learning_rate_init=0.001, # Finer learning rate
-                     max_iter=5000,            # More iterations
-                     random_state=42,
-                     tol=1e-6,                 # Stricter tolerance
-                     verbose=True,             # See training progress
-                     n_iter_no_change=200)     # Stop if no improvement for 200 iterations
+# Define the parameter grid to search
+param_grid = {
+    'hidden_layer_sizes': [(50, 25), (100, 50), (100, 50, 25)], # Try different network sizes
+    'activation': ['relu', 'tanh'], # Try different activation functions
+    'solver': ['adam'], # Adam is generally good, but 'lbfgs' is an option for small datasets
+    'learning_rate_init': [0.001, 0.005], # Different learning rates
+    'alpha': [0.0001, 0.001, 0.01], # L2 regularization term
+    'max_iter': [3000] # Set max_iter for GridSearchCV to be reasonable
+}
 
-print("\n--- Training the Neural Network Model ---")
-model.fit(X_train_scaled, y_train_scaled) # Train with scaled targets
+# Create a base MLP model (no specific parameters yet)
+base_mlp = MLPRegressor(random_state=42, verbose=False, n_iter_no_change=100) # Lower n_iter_no_change for faster grid search
+
+# Create the GridSearchCV object
+# cv=3 means 3-fold cross-validation (splits data into 3 parts, trains on 2, validates on 1, rotates)
+grid_search = GridSearchCV(estimator=base_mlp, param_grid=param_grid,
+                           cv=3, n_jobs=-1, verbose=1, scoring='r2') # n_jobs=-1 uses all CPU cores
+
+# Fit the grid search to your training data
+grid_search.fit(X_train_scaled, y_train_scaled)
+
+print("\n--- GridSearchCV Complete ---")
+
+# Get the best model found by GridSearchCV
+best_model = grid_search.best_estimator_
+best_params = grid_search.best_params_
+best_score = grid_search.best_score_
+
+print(f"\nBest parameters found: {best_params}")
+print(f"Best R-squared score during cross-validation: {best_score:.4f}")
+
+# Now use the best model for final evaluation and prediction
+model = best_model # Assign the best found model to your 'model' variable
 
 print("\n--- Model Training Complete ---")
 
