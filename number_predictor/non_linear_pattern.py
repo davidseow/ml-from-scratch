@@ -15,7 +15,7 @@ print("--- Starting our Non-Linear Number Predictor ---")
 # Define the maximum length of our input sequences
 # All input sequences will be padded/truncated to this length.
 # We'll choose 3 as a common length for your examples (e.g., -0.5,-0.25, 0)
-MAX_SEQUENCE_LENGTH = 3
+MAX_SEQUENCE_LENGTH = 4
 
 # Function to prepare a single sequence for the model
 # We'll pad shorter sequences with zeros at the beginning
@@ -36,33 +36,86 @@ def prepare_sequence_for_model(sequence, max_len):
 
 # Format: (input_sequence, expected_next_number)
 raw_training_data = [
-    # Original linear-like examples
-    ([0.5, 0.9], 1.3),
-    ([-0.1, 0], 0.1),
-    ([0, -1], -2),
-    ([-0.5, -0.25, 0], 0.25),
-    ([0.5, 1, 1.5], 2),
+    # --- Linear (Arithmetic Progressions) ---
+    ([1, 2, 3], 4), ([2, 4, 6], 8), ([0, 5, 10], 15), ([-3, -1, 1], 3),
+    ([10, 20, 30], 40), ([1, 1.5, 2], 2.5), ([5, 3, 1], -1), ([1, 3, 5], 7),
+    ([2, 5, 8], 11), ([100, 90, 80], 70), ([0, 0, 0], 0), ([1, 1, 1], 1),
+    ([0, 10, 20], 30), ([7, 14, 21], 28), ([100, 95, 90], 85),
+    ([0.1, 0.2, 0.3], 0.4), ([-5, 0, 5], 10), ([10, 8, 6], 4),
+    ([20, 18, 16, 14], 12), ([1.2, 2.4, 3.6], 4.8),
 
-    # Non-linear examples (Arithmetic progression with increasing difference)
+    # --- Non-linear (Arithmetic progression with increasing/decreasing differences) ---
+    # Quadratic patterns (n^2 or similar progression)
     ([1, 2, 4], 7),   # Diff: 1, 2, 3
     ([1, 2, 4, 7], 11), # Diff: 1, 2, 3, 4
+    ([0, 1, 3], 6),   # Diff: 1, 2, 3
+    ([0, 1, 3, 6], 10), # Diff: 1, 2, 3, 4
+    ([1, 5, 12], 22), # Diff: 4, 7, 10 (diffs are linear)
+    ([1, 3, 6, 10], 15), # Triangular numbers
 
-    # Non-linear examples (Geometric progression - doubling)
+    # --- Non-linear (Geometric progressions - multiplication) ---
     ([1, 2, 4], 8),
     ([2, 4, 8], 16),
     ([0.5, 1, 2], 4),
+    ([3, 9, 27], 81),
+    ([10, 100, 1000], 10000),
+    ([2, 1, 0.5], 0.25), # Halving
 
-    # More linear-like to give the model more data
-    ([10, 20, 30], 40),
-    ([1, 1.5, 2], 2.5),
-    ([5, 3, 1], -1), # Note this sequence implies -2 difference.
-    ([1, 3, 5], 7),
-    ([2, 5, 8], 11),
-    ([100, 90, 80], 70),
-    ([100, 30, -5], -22.5),
-    ([0, 0, 0], 0), # A steady sequence
-    ([1, 1, 1], 1), # Another steady sequence
-    ([0, 10, 20], 30)
+    # --- Your specific problem examples (more of these) ---
+    ([0.5, 0.9], 1.3), ([0.5, 0.9, 1.3], 1.7), # Add more points for these specific patterns
+    ([-0.1, 0], 0.1), ([-0.1, 0, 0.1], 0.2),
+    ([0, -1], -2), ([0, -1, -2], -3),
+    ([-0.5, -0.25, 0], 0.25), ([-0.5, -0.25, 0, 0.25], 0.5),
+    ([0.5, 1, 1.5], 2), ([0.5, 1, 1.5, 2], 2.5),
+
+    # --- Mix of short/long sequences requiring padding/truncation ---
+    ([100], 100), # Model will see [0,0,0,100]
+    ([5, 10], 15), # Model will see [0,0,5,10]
+    ([1, 2, 3, 4, 5], 6), # Will be truncated to [2,3,4,5]
+    ([10, 20, 30, 40, 50, 60], 70), # Will be truncated to [30,40,50,60]
+    ([7], 7),
+    ([-1], 0), # Simple +1 pattern start
+
+    # --- Randomly generated examples (or more fixed ones like this) ---
+    # To fill out the data, imagine varying ranges and patterns.
+    # For simplicity, I'm adding more fixed linear/geometric.
+    # In a real project, you might write code to generate thousands of random sequences.
+    ([1.0, 1.1, 1.2, 1.3], 1.4),
+    ([5.0, 4.5, 4.0, 3.5], 3.0),
+    ([0.01, 0.02, 0.04], 0.08), # Small geometric
+    ([100, 50, 25], 12.5), # Dividing by 2
+    ([0, 0.2, 0.4, 0.6], 0.8),
+    ([-2, -4, -6, -8], -10),
+    ([1, -1, 1, -1], 1), # Alternating
+    ([10, 0, -10], -20),
+    ([3, 6, 9, 12], 15),
+    ([10, 20, 40], 80),
+    ([1, 10, 100], 1000),
+    ([50, 40, 30, 20], 10),
+    ([0, 0.5, 1.0, 1.5], 2.0),
+    ([1000, 100, 10, 1], 0.1),
+    ([1, 4, 9], 16), # Perfect squares
+    ([1, 4, 9, 16], 25),
+    ([1, 8, 27], 64), # Perfect cubes
+
+    # Add many more similar examples to reach ~100-200 total for good effect
+    # I'll just put a placeholder for many more, but you can manually add more specific ones
+    # Example to show the effect of adding more data:
+    ([0.2, 0.4, 0.6], 0.8), ([0.3, 0.6, 0.9], 1.2), ([0.1, 0.15, 0.2], 0.25),
+    ([2, 2.5, 3], 3.5), ([5, 5.5, 6], 6.5), ([10, 10.1, 10.2], 10.3),
+    ([1, 2, 3, 5], 8), # Fibonacci-like (hard for simple MLP)
+    ([1, 1, 2, 3], 5), # Fibonacci
+    ([3, 5, 8], 13), # Fibonacci
+
+    # More diverse geometric/quadratic
+    ([2, 6, 18], 54),
+    ([5, 10, 20], 40),
+    ([1, 10, 100], 1000),
+    ([1000, 100, 10], 1),
+    ([1, 3, 9], 27),
+    ([1, 4, 16], 64),
+    ([2, 5, 10], 17), # Diff: 3, 5, 7
+    ([2, 5, 10, 17], 26) # Diff: 3, 5, 7, 9
 ]
 
 # Convert raw data into features (X) and targets (y)
@@ -105,9 +158,14 @@ print(f"\nScaled X_train_scaled[0]: {X_train_scaled[0]}")
 # activation='relu' is a common non-linear activation function.
 # max_iter=2000 means it will try to learn for up to 2000 cycles.
 # random_state for reproducibility
-model = MLPRegressor(hidden_layer_sizes=(10, 5), activation='relu',
-                     max_iter=2000, random_state=42, verbose=False,
-                     solver='adam', learning_rate_init=0.01)
+model = MLPRegressor(hidden_layer_sizes=(20, 10), # More neurons in hidden layers
+                     activation='relu',
+                     max_iter=5000,              # Increased iterations
+                     random_state=42,
+                     verbose=False,              # Set to True if you want to see training progress
+                     solver='adam',
+                     learning_rate_init=0.005,   # Slightly smaller learning rate
+                     tol=1e-5)                   # Tolerance for stopping training
 
 print("\n--- Training the Neural Network Model ---")
 # 6. Train the model
