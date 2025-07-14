@@ -4,12 +4,12 @@ This project demonstrates machine learning techniques for predicting numbers bas
 
 ## Getting Started
 
-1. **Install dependencies** (if any):
+1. **Install dependencies**:
    ```bash
    pip install uv
-   uv pip install -r requirements.txt  # or use Pipfile if available
-   # activate your environment as needed
+   uv sync
    ```
+
 2. **Run the scripts**:
    You can run any of the Python scripts in the `number_predictor` directory to see different approaches to number prediction.
    ```bash
