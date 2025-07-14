@@ -6,9 +6,9 @@ This project demonstrates machine learning techniques for predicting numbers bas
 
 1. **Install dependencies** (if any):
    ```bash
-   pip install pipenv
-   pipenv install
-   pipenv shell
+   pip install uv
+   uv pip install -r requirements.txt  # or use Pipfile if available
+   # activate your environment as needed
    ```
 2. **Run the scripts**:
    You can run any of the Python scripts in the `number_predictor` directory to see different approaches to number prediction.
